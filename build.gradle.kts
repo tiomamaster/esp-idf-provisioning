@@ -1,5 +1,5 @@
-val coroutinesVersion = "1.5.2"
-val serializationVersion = "1.3.0"
+val coroutinesVersion = "1.6.0-RC"
+val serializationVersion = "1.3.1"
 
 plugins {
     kotlin("multiplatform")
@@ -38,6 +38,7 @@ kotlin {
         }
         val androidMain by getting {
             dependencies {
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:${coroutinesVersion}")
                 implementation("com.google.crypto.tink:tink-android:1.6.1")
             }
         }

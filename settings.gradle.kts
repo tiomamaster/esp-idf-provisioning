@@ -15,7 +15,7 @@ buildscript {
         mavenCentral()
     }
 
-    val kotlinVersion = "1.5.21"
+    val kotlinVersion = "1.6.0"
     dependencies {
         classpath(kotlin("gradle-plugin", version = kotlinVersion))
         classpath(kotlin("serialization", version = kotlinVersion))
