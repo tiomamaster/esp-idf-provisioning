@@ -62,15 +62,9 @@ class BleProvision(serviceCharacteristicUuid: String) {
                 SessionCommand0(publicKey)
             )
         )
-        peripheral.write(
-            sessionCharacteristic,
-            ProtoBuf.encodeToByteArray(sessionData),
-            WriteType.WithResponse
-        )
-        val response0 =
-            ProtoBuf.decodeFromByteArray<SessionData>(peripheral.read(sessionCharacteristic))
-                .security1payload.sessionResponse0
-                ?: throw Exception("Session establishment failed. SessionResponse0 is null.")
+        val response0 = sessionCharacteristic.writeAndRead(sessionData, false)
+            .security1payload.sessionResponse0
+            ?: throw Exception("Session establishment failed. SessionResponse0 is null.")
 
         val sharedKey = X25519.computeSharedSecret(privateKey, response0.devicePublicKey)
         cipher = Cipher(response0.deviceRandom, sharedKey)
@@ -83,20 +77,14 @@ class BleProvision(serviceCharacteristicUuid: String) {
                 sessionCommand1 = SessionCommand1(clientVerify)
             )
         )
-        peripheral.write(
-            sessionCharacteristic,
-            ProtoBuf.encodeToByteArray(sessionData),
-            WriteType.WithResponse
-        )
-        val deviceVerifyData =
-            ProtoBuf.decodeFromByteArray<SessionData>(peripheral.read(sessionCharacteristic))
-                .security1payload.sessionResponse1?.deviceVerifyData?.run(cipher::decrypt)
-                ?: throw Exception("Session establishment failed. Device verify data is null.")
+        val deviceVerifyData = sessionCharacteristic.writeAndRead(sessionData, false)
+            .security1payload.sessionResponse1?.deviceVerifyData?.run(cipher::decrypt)
+            ?: throw Exception("Session establishment failed. Device verify data is null.")
 
         if (!publicKey.contentEquals(deviceVerifyData)) {
             throw Exception("Session establishment failed. Public key is not equal to device verify data.")
         }
-        Napier.i("Session successfully established with device $device")
+        Napier.i("Session successfully established with the device $device")
     }
 
     suspend fun getWiFiList(): List<WiFi> {
@@ -113,13 +101,7 @@ class BleProvision(serviceCharacteristicUuid: String) {
                 periodMs = 120
             )
         )
-        peripheral.write(
-            scanCharacteristic,
-            cipher.encrypt(ProtoBuf.encodeToByteArray(wifiScanPayload)),
-            WriteType.WithResponse
-        )
-        wifiScanPayload =
-            ProtoBuf.decodeFromByteArray(cipher.decrypt(peripheral.read(scanCharacteristic)))
+        wifiScanPayload = scanCharacteristic.writeAndRead(wifiScanPayload)
         Napier.d("Start wifi scan response = $wifiScanPayload")
 
         // wifi scan status
@@ -127,14 +109,7 @@ class BleProvision(serviceCharacteristicUuid: String) {
             WiFiScanMessageType.COMMAND_SCAN_STATUS,
             commandScanStatus = CommandScanStatus()
         )
-        peripheral.write(
-            scanCharacteristic,
-            cipher.encrypt(ProtoBuf.encodeToByteArray(wifiScanPayload)),
-            WriteType.WithResponse
-        )
-        val responseScanStatus = ProtoBuf.decodeFromByteArray<WifiScanPayload>(
-            cipher.decrypt(peripheral.read(scanCharacteristic))
-        ).responseScanStatus
+        val responseScanStatus = scanCharacteristic.writeAndRead(wifiScanPayload).responseScanStatus
             ?: throw Exception("Unable to get wifi list from devices. Scan status response is null.")
         Napier.d("WiFi scan status response = $wifiScanPayload")
 
@@ -143,17 +118,10 @@ class BleProvision(serviceCharacteristicUuid: String) {
             WiFiScanMessageType.COMMAND_SCAN_RESULT,
             commandScanResult = CommandScanResult(0, responseScanStatus.resultCount)
         )
-        peripheral.write(
-            scanCharacteristic,
-            cipher.encrypt(ProtoBuf.encodeToByteArray(wifiScanPayload)),
-            WriteType.WithResponse
-        )
-        wifiScanPayload =
-            ProtoBuf.decodeFromByteArray(cipher.decrypt(peripheral.read(scanCharacteristic)))
-        return wifiScanPayload.responseScanResult?.entries?.map {
+        return scanCharacteristic.writeAndRead(wifiScanPayload).also {
+            Napier.d("WiFi scan result = $it")
+        }.responseScanResult?.entries?.map {
             WiFi(it.ssid.decodeToString(), it.channel, it.rssi, it.bssid.decodeToString(), it.auth)
-        }?.also {
-            Napier.d("WiFi scan result = $wifiScanPayload")
         } ?: emptyList()
     }
 
@@ -163,4 +131,18 @@ class BleProvision(serviceCharacteristicUuid: String) {
             it.descriptors.firstOrNull()
                 ?.let { descriptor -> this.read(descriptor).decodeToString() }
         }
+
+    private suspend inline fun <reified T> DiscoveredCharacteristic.writeAndRead(
+        data: T,
+        encrypted: Boolean = true
+    ): T {
+        var bytes = ProtoBuf.encodeToByteArray(data)
+        peripheral.write(
+            this,
+            if (encrypted) cipher.encrypt(bytes) else bytes,
+            WriteType.WithResponse
+        )
+        bytes = peripheral.read(this)
+        return ProtoBuf.decodeFromByteArray(if (encrypted) cipher.decrypt(bytes) else bytes)
+    }
 }
