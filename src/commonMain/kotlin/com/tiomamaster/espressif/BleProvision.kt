@@ -4,6 +4,9 @@ import com.benasher44.uuid.uuidFrom
 import com.juul.kable.*
 import com.juul.kable.logs.Logging
 import com.juul.kable.logs.SystemLogEngine
+import com.tiomamaster.espressif.dto.*
+import com.tiomamaster.espressif.model.BleDevice
+import com.tiomamaster.espressif.model.WiFiNetwork
 import io.github.aakira.napier.Napier
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -56,7 +59,7 @@ class BleProvision(serviceCharacteristicUuid: String) {
 
         val (privateKey, publicKey) = X25519.generateKeyPair()
         var sessionData = SessionData(
-            1,
+            SecuritySchemeVersion.SECURITY_SCHEME_1,
             Security1Payload(
                 Security1MessageType.COMMAND_0,
                 SessionCommand0(publicKey)
@@ -71,7 +74,7 @@ class BleProvision(serviceCharacteristicUuid: String) {
         val clientVerify = cipher.encrypt(response0.devicePublicKey)
 
         sessionData = SessionData(
-            1,
+            SecuritySchemeVersion.SECURITY_SCHEME_1,
             Security1Payload(
                 Security1MessageType.COMMAND_1,
                 sessionCommand1 = SessionCommand1(clientVerify)
@@ -87,7 +90,7 @@ class BleProvision(serviceCharacteristicUuid: String) {
         Napier.i("Session successfully established with the device $device")
     }
 
-    suspend fun getWiFiList(): List<WiFi> {
+    suspend fun getWiFiList(): List<WiFiNetwork> {
         val scanCharacteristic = characteristics?.get("prov-scan")
             ?: throw IllegalStateException("Characteristic with prov-scan descriptor not found")
 
@@ -121,7 +124,7 @@ class BleProvision(serviceCharacteristicUuid: String) {
         return scanCharacteristic.writeAndRead(wifiScanPayload).also {
             Napier.d("WiFi scan result = $it")
         }.responseScanResult?.entries?.map {
-            WiFi(it.ssid.decodeToString(), it.channel, it.rssi, it.bssid.decodeToString(), it.auth)
+            WiFiNetwork(it.ssid, it.channel, it.rssi, it.bssid, it.auth)
         } ?: emptyList()
     }
 

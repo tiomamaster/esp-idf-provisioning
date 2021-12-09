@@ -1,4 +1,4 @@
-package com.tiomamaster.espressif
+package com.tiomamaster.espressif.model
 
 data class BleDevice(val name: String?, val mac: String?, val rssi: Int, val txPower: Int?) {
 

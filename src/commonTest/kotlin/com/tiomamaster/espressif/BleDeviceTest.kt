@@ -2,6 +2,7 @@
 
 package com.tiomamaster.espressif
 
+import com.tiomamaster.espressif.model.BleDevice
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
