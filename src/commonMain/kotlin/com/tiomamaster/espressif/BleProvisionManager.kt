@@ -57,8 +57,7 @@ class BleProvisionManager(serviceCharacteristicUuid: String) {
 
         characteristics = peripheral.discoverCharacteristics()
 
-        val sessionCharacteristic = characteristics?.get("prov-session")
-            ?: throw IllegalStateException("Characteristic with prov-session descriptor not found")
+        val sessionCharacteristic = getCharacteristic(PATH_SESSION)
 
         val (privateKey, publicKey) = X25519.generateKeyPair()
         var sessionData = SessionData(
@@ -94,8 +93,7 @@ class BleProvisionManager(serviceCharacteristicUuid: String) {
     }
 
     suspend fun getWiFiList(): List<WiFiNetwork> {
-        val scanCharacteristic = characteristics?.get("prov-scan")
-            ?: throw IllegalStateException("Characteristic with prov-scan descriptor not found")
+        val scanCharacteristic = getCharacteristic(PATH_SCAN)
 
         // start wifi scan
         var wifiScanPayload = WifiScanPayload(
@@ -132,8 +130,7 @@ class BleProvisionManager(serviceCharacteristicUuid: String) {
     }
 
     suspend fun configureWiFi(ssid: String, passphrase: String) {
-        val configCharacteristic = characteristics?.get("prov-config")
-            ?: throw  throw IllegalStateException("Characteristic with prov-config descriptor not found")
+        val configCharacteristic = getCharacteristic(PATH_CONFIG)
 
         var wiFiConfigPayload = WiFiConfigPayload(
             WiFiConfigMessageType.COMMAND_SET_CONFIG,
@@ -148,8 +145,7 @@ class BleProvisionManager(serviceCharacteristicUuid: String) {
     }
 
     suspend fun applyConfigurations() {
-        val configCharacteristic = characteristics?.get("prov-config")
-            ?: throw  throw IllegalStateException("Characteristic with prov-config descriptor not found")
+        val configCharacteristic = getCharacteristic(PATH_CONFIG)
 
         var wiFiConfigPayload = WiFiConfigPayload(
             WiFiConfigMessageType.COMMAND_APPLY_CONFIG,
@@ -163,8 +159,7 @@ class BleProvisionManager(serviceCharacteristicUuid: String) {
     }
 
     suspend fun checkWifiConnectionStatus() {
-        val configCharacteristic = characteristics?.get("prov-config")
-            ?: throw  throw IllegalStateException("Characteristic with prov-config descriptor not found")
+        val configCharacteristic = getCharacteristic(PATH_CONFIG)
 
         while (true) {
             var wiFiConfigPayload = WiFiConfigPayload(
@@ -190,8 +185,7 @@ class BleProvisionManager(serviceCharacteristicUuid: String) {
     }
 
     suspend fun sendConfigData(path: String, data: ByteArray): ByteArray {
-        val customCharacteristic = characteristics?.get(path)
-            ?: throw IllegalStateException("Characteristic with $path descriptor not found")
+        val customCharacteristic = getCharacteristic(path)
 
         return customCharacteristic.writeAndRead(data)
     }
@@ -202,6 +196,11 @@ class BleProvisionManager(serviceCharacteristicUuid: String) {
             it.descriptors.firstOrNull()
                 ?.let { descriptor -> this.read(descriptor).decodeToString() }
         }
+
+    private fun getCharacteristic(path: String): DiscoveredCharacteristic =
+        if (characteristics == null) throw IllegalStateException("There are no discovered characteristics. Call connect() first.")
+        else characteristics?.get(path)
+            ?: throw IllegalStateException("Characteristic with $path descriptor not found")
 
     private suspend inline fun <reified T> DiscoveredCharacteristic.writeAndRead(
         data: T,
@@ -216,5 +215,11 @@ class BleProvisionManager(serviceCharacteristicUuid: String) {
         bytes = peripheral.read(this)
         bytes = if (encrypted) cipher.decrypt(bytes) else bytes
         return if (data is ByteArray) bytes as T else ProtoBuf.decodeFromByteArray(bytes)
+    }
+
+    companion object {
+        private const val PATH_SESSION = "prov-session"
+        private const val PATH_SCAN = "prov-scan"
+        private const val PATH_CONFIG = "prov-config"
     }
 }
