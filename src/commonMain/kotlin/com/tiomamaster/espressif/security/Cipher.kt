@@ -1,4 +1,4 @@
-package com.tiomamaster.espressif
+package com.tiomamaster.espressif.security
 
 expect class Cipher(deviceRandom: ByteArray, sharedKey: ByteArray) {
 

@@ -1,4 +1,4 @@
-package com.tiomamaster.espressif
+package com.tiomamaster.espressif.security
 
 actual object X25519 {
 

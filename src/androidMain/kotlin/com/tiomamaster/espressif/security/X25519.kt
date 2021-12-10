@@ -1,4 +1,4 @@
-package com.tiomamaster.espressif
+package com.tiomamaster.espressif.security
 
 import com.google.crypto.tink.subtle.X25519
 

@@ -1,4 +1,4 @@
-package com.tiomamaster.espressif
+package com.tiomamaster.espressif.security
 
 actual class Cipher actual constructor(deviceRandom: ByteArray, sharedKey: ByteArray) {
 

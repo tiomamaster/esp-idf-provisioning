@@ -30,9 +30,9 @@ data class WiFiConfigPayload(
     @ProtoNumber(10) val commandGetStatus: CommandGetStatus? = null,
     @ProtoNumber(11) val responseGetStatus: ResponseGetStatus? = null,
     @ProtoNumber(12) val commandSetConfig: CommandSetConfig? = null,
-    @ProtoNumber(13) val responseSetConfig: ResponseSetConfig? = null,
+    @ProtoNumber(13) val responseSetConfig: StatusResponse? = null,
     @ProtoNumber(14) val commApplyConfig: CommandApplyConfig? = null,
-    @ProtoNumber(15) val responseApplyConfig: ResponseApplyConfig? = null,
+    @ProtoNumber(15) val responseApplyConfig: StatusResponse? = null,
 )
 
 @Serializable
@@ -52,10 +52,7 @@ data class CommandSetConfig(
 )
 
 @Serializable
-data class ResponseSetConfig(@ProtoNumber(1) val status: Status? = null)
+data class StatusResponse(@ProtoNumber(1) val status: Status? = null)
 
 @Serializable
 class CommandApplyConfig
-
-@Serializable
-data class ResponseApplyConfig(@ProtoNumber(1) val status: Status? = null)

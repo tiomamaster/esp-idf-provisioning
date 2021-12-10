@@ -7,9 +7,12 @@ import com.juul.kable.logs.SystemLogEngine
 import com.tiomamaster.espressif.dto.*
 import com.tiomamaster.espressif.model.BleDevice
 import com.tiomamaster.espressif.model.WiFiNetwork
+import com.tiomamaster.espressif.security.Cipher
+import com.tiomamaster.espressif.security.X25519
 import io.github.aakira.napier.Napier
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flowOn
@@ -18,7 +21,7 @@ import kotlinx.serialization.decodeFromByteArray
 import kotlinx.serialization.encodeToByteArray
 import kotlinx.serialization.protobuf.ProtoBuf
 
-class BleProvision(serviceCharacteristicUuid: String) {
+class BleProvisionManager(serviceCharacteristicUuid: String) {
 
     private val scanner = Scanner {
         services = listOf(uuidFrom(serviceCharacteristicUuid))
@@ -128,6 +131,71 @@ class BleProvision(serviceCharacteristicUuid: String) {
         } ?: emptyList()
     }
 
+    suspend fun configureWiFi(ssid: String, passphrase: String) {
+        val configCharacteristic = characteristics?.get("prov-config")
+            ?: throw  throw IllegalStateException("Characteristic with prov-config descriptor not found")
+
+        var wiFiConfigPayload = WiFiConfigPayload(
+            WiFiConfigMessageType.COMMAND_SET_CONFIG,
+            commandSetConfig = CommandSetConfig(ssid, passphrase)
+        )
+        wiFiConfigPayload = configCharacteristic.writeAndRead(wiFiConfigPayload)
+        Napier.d("WiFi configure response = $wiFiConfigPayload")
+
+        if (wiFiConfigPayload.responseSetConfig?.status != Status.SUCCESS) {
+            throw Exception("Could not send wifi credentials to device")
+        }
+    }
+
+    suspend fun applyConfigurations() {
+        val configCharacteristic = characteristics?.get("prov-config")
+            ?: throw  throw IllegalStateException("Characteristic with prov-config descriptor not found")
+
+        var wiFiConfigPayload = WiFiConfigPayload(
+            WiFiConfigMessageType.COMMAND_APPLY_CONFIG,
+            commApplyConfig = CommandApplyConfig()
+        )
+        wiFiConfigPayload = configCharacteristic.writeAndRead(wiFiConfigPayload)
+        Napier.d("Apply configurations response = $wiFiConfigPayload")
+
+        val status = wiFiConfigPayload.responseApplyConfig?.status
+        if (status != Status.SUCCESS) throw Exception("Apply configurations failed. Status = $status")
+    }
+
+    suspend fun checkWifiConnectionStatus() {
+        val configCharacteristic = characteristics?.get("prov-config")
+            ?: throw  throw IllegalStateException("Characteristic with prov-config descriptor not found")
+
+        while (true) {
+            var wiFiConfigPayload = WiFiConfigPayload(
+                WiFiConfigMessageType.COMMAND_GET_STATUS,
+                commandGetStatus = CommandGetStatus()
+            )
+            wiFiConfigPayload = configCharacteristic.writeAndRead(wiFiConfigPayload)
+            Napier.d("Get wifi status response = $wiFiConfigPayload")
+
+            val status = wiFiConfigPayload.responseGetStatus?.status
+            val failedReason = wiFiConfigPayload.responseGetStatus?.failedReason
+            val stationState = wiFiConfigPayload.responseGetStatus?.stationState
+            if (status == Status.SUCCESS) {
+                when (stationState) {
+                    WifiStationState.CONNECTED -> break
+                    WifiStationState.CONNECTING -> delay(500)
+                    else -> throw Exception("WiFi connection failed. stationState = $stationState, failedReason = $failedReason")
+                }
+            } else {
+                throw Exception("WiFi connection failed. status = $status, stationState = $stationState, failedReason = $failedReason")
+            }
+        }
+    }
+
+    suspend fun sendConfigData(path: String, data: ByteArray): ByteArray {
+        val customCharacteristic = characteristics?.get(path)
+            ?: throw IllegalStateException("Characteristic with $path descriptor not found")
+
+        return customCharacteristic.writeAndRead(data)
+    }
+
     private suspend fun Peripheral.discoverCharacteristics() = this.services
         ?.flatMap(DiscoveredService::characteristics)
         ?.associateBy {
@@ -139,13 +207,14 @@ class BleProvision(serviceCharacteristicUuid: String) {
         data: T,
         encrypted: Boolean = true
     ): T {
-        var bytes = ProtoBuf.encodeToByteArray(data)
+        var bytes = if (data is ByteArray) data else ProtoBuf.encodeToByteArray(data)
         peripheral.write(
             this,
             if (encrypted) cipher.encrypt(bytes) else bytes,
             WriteType.WithResponse
         )
         bytes = peripheral.read(this)
-        return ProtoBuf.decodeFromByteArray(if (encrypted) cipher.decrypt(bytes) else bytes)
+        bytes = if (encrypted) cipher.decrypt(bytes) else bytes
+        return if (data is ByteArray) bytes as T else ProtoBuf.decodeFromByteArray(bytes)
     }
 }
