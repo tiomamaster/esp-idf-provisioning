@@ -41,11 +41,11 @@ class BleProvisionManager(serviceCharacteristicUuid: String) {
     private val Advertisement.mac
         get() = toString().substringAfter("bluetoothDevice=").substringBefore(",")
 
-    fun searchDevices(): Flow<Set<BleDevice>> {
+    fun searchDevices(): Flow<List<BleDevice>> {
         val devices = mutableSetOf<BleDevice>()
         return scanner.advertisements.map {
             devices.add(BleDevice(it.name, it.mac, it.rssi, it.txPower))
-            devices
+            devices.toList()
         }.flowOn(Dispatchers.Default)
     }
 
@@ -184,11 +184,8 @@ class BleProvisionManager(serviceCharacteristicUuid: String) {
         }
     }
 
-    suspend fun sendConfigData(path: String, data: ByteArray): ByteArray {
-        val customCharacteristic = getCharacteristic(path)
-
-        return customCharacteristic.writeAndRead(data)
-    }
+    suspend fun sendConfigData(path: String, data: ByteArray): ByteArray =
+        getCharacteristic(path).writeAndRead(data)
 
     private suspend fun Peripheral.discoverCharacteristics() = this.services
         ?.flatMap(DiscoveredService::characteristics)

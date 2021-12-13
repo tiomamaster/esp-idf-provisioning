@@ -26,7 +26,7 @@ data class SessionCommand0(@ProtoNumber(1) val clientPublicKey: ByteArray)
 @Suppress("ArrayInDataClass")
 @Serializable
 data class SessionResponse0(
-    @ProtoNumber(1) val status: Status? = null,
+    @ProtoNumber(1) val status: Status = Status.SUCCESS,
     @ProtoNumber(2) val devicePublicKey: ByteArray,
     @ProtoNumber(3) val deviceRandom: ByteArray
 )
@@ -38,6 +38,6 @@ data class SessionCommand1(@ProtoNumber(2) val clientVerifyData: ByteArray)
 @Suppress("ArrayInDataClass")
 @Serializable
 data class SessionResponse1(
-    @ProtoNumber(1) val status: Status? = null,
+    @ProtoNumber(1) val status: Status = Status.SUCCESS,
     @ProtoNumber(3) val deviceVerifyData: ByteArray
 )

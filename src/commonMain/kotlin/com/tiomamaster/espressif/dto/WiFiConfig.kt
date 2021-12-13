@@ -40,8 +40,8 @@ class CommandGetStatus
 
 @Serializable
 data class ResponseGetStatus(
-    @ProtoNumber(1) val status: Status? = null,
-    @ProtoNumber(2) val stationState: WifiStationState? = null,
+    @ProtoNumber(1) val status: Status = Status.SUCCESS,
+    @ProtoNumber(2) val stationState: WifiStationState = WifiStationState.CONNECTED,
     @ProtoNumber(10) val failedReason: WifiConnectFailedReason? = null
 )
 
@@ -52,7 +52,7 @@ data class CommandSetConfig(
 )
 
 @Serializable
-data class StatusResponse(@ProtoNumber(1) val status: Status? = null)
+data class StatusResponse(@ProtoNumber(1) val status: Status = Status.SUCCESS)
 
 @Serializable
 class CommandApplyConfig

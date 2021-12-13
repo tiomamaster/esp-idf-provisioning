@@ -24,7 +24,7 @@ enum class WiFiAuthMode(val value: Int) {
 @Serializable
 data class WifiScanPayload(
     @ProtoNumber(1) val msg: WiFiScanMessageType,
-    @ProtoNumber(2) val status: Status? = null,
+    @ProtoNumber(2) val status: Status = Status.SUCCESS,
     @ProtoNumber(10) val commandScanStart: CommandScanStart? = null,
     @ProtoNumber(12) val commandScanStatus: CommandScanStatus? = null,
     @ProtoNumber(13) val responseScanStatus: ResponseScanStatus? = null,
@@ -64,5 +64,5 @@ data class WiFiScanResult(
     @ProtoNumber(2) val channel: Int,
     @ProtoNumber(3) val rssi: Int,
     @ProtoNumber(4) val bssid: String,
-    @ProtoNumber(5) val auth: WiFiAuthMode
+    @ProtoNumber(5) val auth: WiFiAuthMode = WiFiAuthMode.OPEN
 )
