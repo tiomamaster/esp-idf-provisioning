@@ -2,7 +2,7 @@ package com.tiomamaster.espressif.security
 
 import com.google.crypto.tink.subtle.X25519
 
-actual object X25519 {
+internal actual object X25519 {
 
     actual fun generateKeyPair(): Pair<PrivateKey, PublicKey> {
         val privateKey = X25519.generatePrivateKey()

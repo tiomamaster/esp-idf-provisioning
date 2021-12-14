@@ -3,7 +3,7 @@ package com.tiomamaster.espressif.dto
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.protobuf.ProtoNumber
 
-enum class Security1MessageType(val value: Int) {
+internal enum class Security1MessageType(val value: Int) {
     COMMAND_0(0),
     RESPONSE_0(1),
     COMMAND_1(2),
@@ -11,7 +11,7 @@ enum class Security1MessageType(val value: Int) {
 }
 
 @Serializable
-data class Security1Payload(
+internal data class Security1Payload(
     @ProtoNumber(1) val msg: Security1MessageType,
     @ProtoNumber(20) val sessionCommand0: SessionCommand0? = null,
     @ProtoNumber(21) val sessionResponse0: SessionResponse0? = null,
@@ -21,11 +21,11 @@ data class Security1Payload(
 
 @Suppress("ArrayInDataClass")
 @Serializable
-data class SessionCommand0(@ProtoNumber(1) val clientPublicKey: ByteArray)
+internal data class SessionCommand0(@ProtoNumber(1) val clientPublicKey: ByteArray)
 
 @Suppress("ArrayInDataClass")
 @Serializable
-data class SessionResponse0(
+internal data class SessionResponse0(
     @ProtoNumber(1) val status: Status = Status.SUCCESS,
     @ProtoNumber(2) val devicePublicKey: ByteArray,
     @ProtoNumber(3) val deviceRandom: ByteArray
@@ -33,11 +33,11 @@ data class SessionResponse0(
 
 @Suppress("ArrayInDataClass")
 @Serializable
-data class SessionCommand1(@ProtoNumber(2) val clientVerifyData: ByteArray)
+internal data class SessionCommand1(@ProtoNumber(2) val clientVerifyData: ByteArray)
 
 @Suppress("ArrayInDataClass")
 @Serializable
-data class SessionResponse1(
+internal data class SessionResponse1(
     @ProtoNumber(1) val status: Status = Status.SUCCESS,
     @ProtoNumber(3) val deviceVerifyData: ByteArray
 )

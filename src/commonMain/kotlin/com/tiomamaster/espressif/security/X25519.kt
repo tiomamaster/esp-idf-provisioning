@@ -3,7 +3,7 @@ package com.tiomamaster.espressif.security
 typealias PrivateKey = ByteArray
 typealias PublicKey = ByteArray
 
-expect object X25519 {
+internal expect object X25519 {
 
     fun generateKeyPair(): Pair<PrivateKey, PublicKey>
 

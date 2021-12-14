@@ -1,6 +1,6 @@
 package com.tiomamaster.espressif.security
 
-actual object X25519 {
+internal actual object X25519 {
 
     actual fun generateKeyPair(): Pair<PrivateKey, PublicKey> {
         TODO("Not yet implemented")

@@ -3,7 +3,7 @@ package com.tiomamaster.espressif.dto
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.protobuf.ProtoNumber
 
-enum class WiFiConfigMessageType(val value: Int) {
+internal enum class WiFiConfigMessageType(val value: Int) {
     COMMAND_GET_STATUS(0),
     RESPONSE_GET_STATUS(1),
     COMMAND_SET_CONFIG(2),
@@ -12,20 +12,20 @@ enum class WiFiConfigMessageType(val value: Int) {
     RESPONSE_APPLY_CONFIG(5)
 }
 
-enum class WifiStationState(val value: Int) {
+internal enum class WifiStationState(val value: Int) {
     CONNECTED(0),
     CONNECTING(1),
     DISCONNECTED(2),
     CONNECTION_FAILED(3)
 }
 
-enum class WifiConnectFailedReason(val value: Int) {
+internal enum class WifiConnectFailedReason(val value: Int) {
     AUTH_ERROR(0),
     NETWORK_NOT_FOUND(1)
 }
 
 @Serializable
-data class WiFiConfigPayload(
+internal data class WiFiConfigPayload(
     @ProtoNumber(1) val msg: WiFiConfigMessageType,
     @ProtoNumber(10) val commandGetStatus: CommandGetStatus? = null,
     @ProtoNumber(11) val responseGetStatus: ResponseGetStatus? = null,
@@ -36,23 +36,23 @@ data class WiFiConfigPayload(
 )
 
 @Serializable
-class CommandGetStatus
+internal class CommandGetStatus
 
 @Serializable
-data class ResponseGetStatus(
+internal data class ResponseGetStatus(
     @ProtoNumber(1) val status: Status = Status.SUCCESS,
     @ProtoNumber(2) val stationState: WifiStationState = WifiStationState.CONNECTED,
     @ProtoNumber(10) val failedReason: WifiConnectFailedReason? = null
 )
 
 @Serializable
-data class CommandSetConfig(
+internal data class CommandSetConfig(
     @ProtoNumber(1) val ssid: String,
     @ProtoNumber(2) val passphrase: String
 )
 
 @Serializable
-data class StatusResponse(@ProtoNumber(1) val status: Status = Status.SUCCESS)
+internal data class StatusResponse(@ProtoNumber(1) val status: Status = Status.SUCCESS)
 
 @Serializable
-class CommandApplyConfig
+internal class CommandApplyConfig

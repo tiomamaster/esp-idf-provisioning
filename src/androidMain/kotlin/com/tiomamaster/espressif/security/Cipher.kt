@@ -4,7 +4,7 @@ import javax.crypto.Cipher
 import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
 
-actual class Cipher actual constructor(deviceRandom: ByteArray, sharedKey: ByteArray) {
+internal actual class Cipher actual constructor(deviceRandom: ByteArray, sharedKey: ByteArray) {
 
     private val cipher = Cipher.getInstance("AES/CTR/NoPadding").apply {
         init(

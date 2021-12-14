@@ -1,6 +1,6 @@
 package com.tiomamaster.espressif.dto
 
-enum class Status(val value: Int) {
+internal enum class Status(val value: Int) {
     SUCCESS(0),
     INVALID_SECURITY_SCHEME(1),
     INVALID_PROTO(2),

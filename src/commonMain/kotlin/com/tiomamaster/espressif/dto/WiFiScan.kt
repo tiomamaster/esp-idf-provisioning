@@ -3,7 +3,7 @@ package com.tiomamaster.espressif.dto
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.protobuf.ProtoNumber
 
-enum class WiFiScanMessageType(val value: Int) {
+internal enum class WiFiScanMessageType(val value: Int) {
     COMMAND_SCAN_START(0),
     RESPONSE_SCAN_START(1),
     COMMAND_SCAN_STATUS(2),
@@ -22,7 +22,7 @@ enum class WiFiAuthMode(val value: Int) {
 }
 
 @Serializable
-data class WifiScanPayload(
+internal data class WifiScanPayload(
     @ProtoNumber(1) val msg: WiFiScanMessageType,
     @ProtoNumber(2) val status: Status = Status.SUCCESS,
     @ProtoNumber(10) val commandScanStart: CommandScanStart? = null,
@@ -33,7 +33,7 @@ data class WifiScanPayload(
 )
 
 @Serializable
-data class CommandScanStart(
+internal data class CommandScanStart(
     @ProtoNumber(1) val blocking: Boolean,
     @ProtoNumber(2) val passive: Boolean,
     @ProtoNumber(3) val groupChannels: Int,
@@ -41,25 +41,25 @@ data class CommandScanStart(
 )
 
 @Serializable
-class CommandScanStatus
+internal class CommandScanStatus
 
 @Serializable
-data class ResponseScanStatus(
+internal data class ResponseScanStatus(
     @ProtoNumber(1) val scanFinished: Boolean,
     @ProtoNumber(2) val resultCount: Int
 )
 
 @Serializable
-data class CommandScanResult(
+internal data class CommandScanResult(
     @ProtoNumber(1) val startIndex: Int,
     @ProtoNumber(2) val count: Int
 )
 
 @Serializable
-data class ResponseScanResult(@ProtoNumber(1) val entries: List<WiFiScanResult> = emptyList())
+internal data class ResponseScanResult(@ProtoNumber(1) val entries: List<WiFiScanResult> = emptyList())
 
 @Serializable
-data class WiFiScanResult(
+internal data class WiFiScanResult(
     @ProtoNumber(1) val ssid: String,
     @ProtoNumber(2) val channel: Int,
     @ProtoNumber(3) val rssi: Int,
