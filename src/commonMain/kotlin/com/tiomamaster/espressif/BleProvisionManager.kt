@@ -158,7 +158,7 @@ class BleProvisionManager(serviceCharacteristicUuid: String) {
         if (status != Status.SUCCESS) throw Exception("Apply configurations failed. Status = $status")
     }
 
-    suspend fun checkWifiConnectionStatus() {
+    suspend fun checkWifiConnectionStatus(): WifiConnectFailedReason? {
         val configCharacteristic = getCharacteristic(PATH_CONFIG)
 
         while (true) {
@@ -174,9 +174,12 @@ class BleProvisionManager(serviceCharacteristicUuid: String) {
             val stationState = wiFiConfigPayload.responseGetStatus?.stationState
             if (status == Status.SUCCESS) {
                 when (stationState) {
-                    WifiStationState.CONNECTED -> break
+                    WifiStationState.CONNECTED -> return null
                     WifiStationState.CONNECTING -> delay(500)
-                    else -> throw Exception("WiFi connection failed. stationState = $stationState, failedReason = $failedReason")
+                    else -> {
+                        Napier.d("WiFi connection failed. stationState = $stationState, failedReason = $failedReason")
+                        return failedReason
+                    }
                 }
             } else {
                 throw Exception("WiFi connection failed. status = $status, stationState = $stationState, failedReason = $failedReason")

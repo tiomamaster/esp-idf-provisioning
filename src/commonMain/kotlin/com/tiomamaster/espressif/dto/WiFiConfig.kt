@@ -19,7 +19,7 @@ internal enum class WifiStationState(val value: Int) {
     CONNECTION_FAILED(3)
 }
 
-internal enum class WifiConnectFailedReason(val value: Int) {
+enum class WifiConnectFailedReason(val value: Int) {
     AUTH_ERROR(0),
     NETWORK_NOT_FOUND(1)
 }
