@@ -4,7 +4,6 @@ pluginManagement {
         gradlePluginPortal()
         mavenCentral()
     }
-    
 }
 rootProject.name = "esp-idf-provisioning"
 
@@ -15,7 +14,7 @@ buildscript {
         mavenCentral()
     }
 
-    val kotlinVersion = "1.6.0"
+    val kotlinVersion = "1.6.10"
     dependencies {
         classpath(kotlin("gradle-plugin", version = kotlinVersion))
         classpath(kotlin("serialization", version = kotlinVersion))
