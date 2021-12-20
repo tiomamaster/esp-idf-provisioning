@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.serialization.decodeFromByteArray
 import kotlinx.serialization.encodeToByteArray
 import kotlinx.serialization.protobuf.ProtoBuf
+import kotlin.coroutines.coroutineContext
 
 class BleProvisionManager(serviceCharacteristicUuid: String) {
 
@@ -49,10 +50,10 @@ class BleProvisionManager(serviceCharacteristicUuid: String) {
         }.flowOn(Dispatchers.Default)
     }
 
-    suspend fun connect(device: BleDevice, scope: CoroutineScope) {
+    suspend fun connect(device: BleDevice) {
         val advertisement = scanner.advertisements.firstOrNull { it.mac == device.mac }
             ?: throw Exception("Can't find bluetooth device with the given mac ${device.mac}")
-        peripheral = scope.peripheral(advertisement)
+        peripheral = CoroutineScope(coroutineContext).peripheral(advertisement)
         peripheral.connect()
 
         characteristics = peripheral.discoverCharacteristics()
