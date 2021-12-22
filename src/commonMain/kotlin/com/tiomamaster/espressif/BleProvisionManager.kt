@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.decodeFromByteArray
 import kotlinx.serialization.encodeToByteArray
 import kotlinx.serialization.protobuf.ProtoBuf
@@ -91,6 +92,10 @@ class BleProvisionManager(serviceCharacteristicUuid: String) {
             throw Exception("Session establishment failed. Public key is not equal to device verify data.")
         }
         Napier.i("Session successfully established with the device $device")
+    }
+
+    suspend fun disconnect() = withTimeoutOrNull(5_000L) {
+        peripheral.disconnect()
     }
 
     suspend fun getWiFiList(): List<WiFiNetwork> {
