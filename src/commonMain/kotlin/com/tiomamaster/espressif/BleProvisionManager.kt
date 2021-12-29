@@ -23,6 +23,13 @@ import kotlinx.serialization.encodeToByteArray
 import kotlinx.serialization.protobuf.ProtoBuf
 import kotlin.coroutines.coroutineContext
 
+/**
+ * Asynchronous implementation of the ESP-IDF unified provisioning. Transport - BLE, security scheme - Security1.
+ *
+ * @param [serviceCharacteristicUuid] used for [searchDevices]
+ *
+ * @see <a href="https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/provisioning/provisioning.html#unified-provisioning">Unified Provisioning</a>
+ */
 class BleProvisionManager(serviceCharacteristicUuid: String) {
 
     private val scanner = Scanner {
@@ -43,6 +50,9 @@ class BleProvisionManager(serviceCharacteristicUuid: String) {
     private val Advertisement.mac
         get() = toString().substringAfter("bluetoothDevice=").substringBefore(",")
 
+    /**
+     * Search for available ble devices.
+     */
     fun searchDevices(): Flow<List<BleDevice>> {
         val devices = mutableSetOf<BleDevice>()
         return scanner.advertisements.map {
@@ -51,6 +61,13 @@ class BleProvisionManager(serviceCharacteristicUuid: String) {
         }.flowOn(Dispatchers.Default)
     }
 
+    /**
+     * Connect to a [BleDevice] and establish session with the Security1 scheme.
+     *
+     * @throws [Exception] with a detailed message if connection or session establishment failed
+     *
+     * @see <a href="https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/provisioning/provisioning.html#security-schemes">Security Schemes</a>
+     */
     suspend fun connect(device: BleDevice) {
         val advertisement = scanner.advertisements.firstOrNull { it.mac == device.mac }
             ?: throw Exception("Can't find bluetooth device with the given mac ${device.mac}")
@@ -94,10 +111,21 @@ class BleProvisionManager(serviceCharacteristicUuid: String) {
         Napier.i("Session successfully established with the device $device")
     }
 
+    /**
+     * Disconnect from the previously connected device using [connect].
+     */
     suspend fun disconnect() = withTimeoutOrNull(5_000L) {
         peripheral.disconnect()
     }
 
+    /**
+     * Send scan for wifi networks command to the connected device.
+     *
+     * @return list of the available for provisioning wifi networks that are 'seen' by the connected device
+     *
+     * @throws [Exception] if device responds with a wrong status
+     * @throws [IllegalStateException] if not connected to the device
+     */
     suspend fun getWiFiList(): List<WiFiNetwork> {
         val scanCharacteristic = getCharacteristic(PATH_SCAN)
 
@@ -120,7 +148,7 @@ class BleProvisionManager(serviceCharacteristicUuid: String) {
             commandScanStatus = CommandScanStatus()
         )
         val responseScanStatus = scanCharacteristic.writeAndRead(wifiScanPayload).responseScanStatus
-            ?: throw Exception("Unable to get wifi list from devices. Scan status response is null.")
+            ?: throw Exception("Unable to get wifi list from device. Scan status response is null.")
         Napier.d("WiFi scan status response = $wifiScanPayload")
 
         // wifi scan result
@@ -135,6 +163,15 @@ class BleProvisionManager(serviceCharacteristicUuid: String) {
         } ?: emptyList()
     }
 
+    /**
+     * Send wifi network configuration to the connected device
+     *
+     * @param [ssid] wifi network name, which could be found using [getWiFiList]
+     * @param [passphrase] valid wifi network password
+     *
+     * @throws [Exception] if device responds with a wrong status
+     * @throws [IllegalStateException] if not connected to the device
+     */
     suspend fun configureWiFi(ssid: String, passphrase: String) {
         val configCharacteristic = getCharacteristic(PATH_CONFIG)
 
@@ -150,6 +187,12 @@ class BleProvisionManager(serviceCharacteristicUuid: String) {
         }
     }
 
+    /**
+     * Apply all device configurations which were send by [configureWiFi] or [sendConfigData].
+     *
+     * @throws [Exception] if device responds with a wrong status
+     * @throws [IllegalStateException] if not connected to the device
+     */
     suspend fun applyConfigurations() {
         val configCharacteristic = getCharacteristic(PATH_CONFIG)
 
@@ -164,7 +207,15 @@ class BleProvisionManager(serviceCharacteristicUuid: String) {
         if (status != Status.SUCCESS) throw Exception("Apply configurations failed. Status = $status")
     }
 
-    suspend fun checkWifiConnectionStatus(): WifiConnectFailedReason? {
+    /**
+     * Check the device wifi connection status.
+     *
+     * @return null if device successfully connected to the provided wifi network or [WifiConnectFailReason] if connection failed
+     *
+     * @throws [Exception] if device responds with a wrong status
+     * @throws [IllegalStateException] if not connected to the device
+     */
+    suspend fun checkWifiConnectionStatus(): WifiConnectFailReason? {
         val configCharacteristic = getCharacteristic(PATH_CONFIG)
 
         while (true) {
@@ -176,7 +227,7 @@ class BleProvisionManager(serviceCharacteristicUuid: String) {
             Napier.d("Get wifi status response = $wiFiConfigPayload")
 
             val status = wiFiConfigPayload.responseGetStatus?.status
-            val failedReason = wiFiConfigPayload.responseGetStatus?.failedReason
+            val failedReason = wiFiConfigPayload.responseGetStatus?.failReason
             val stationState = wiFiConfigPayload.responseGetStatus?.stationState
             if (status == Status.SUCCESS) {
                 when (stationState) {
@@ -193,6 +244,14 @@ class BleProvisionManager(serviceCharacteristicUuid: String) {
         }
     }
 
+    /**
+     * Send custom config data to device. The returned [ByteArray] is read from the same path.
+     *
+     * @param [path] descriptor name of the characteristic you want to send, for example custom-endpoint
+     * @param [data] the data to send
+     *
+     * @throws [IllegalStateException] if not connected to the device, or if characteristic with [path] descriptor not found
+     */
     suspend fun sendConfigData(path: String, data: ByteArray): ByteArray =
         getCharacteristic(path).writeAndRead(data)
 

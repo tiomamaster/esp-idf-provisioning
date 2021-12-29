@@ -19,7 +19,7 @@ internal enum class WifiStationState(val value: Int) {
     CONNECTION_FAILED(3)
 }
 
-enum class WifiConnectFailedReason(val value: Int) {
+enum class WifiConnectFailReason(val value: Int) {
     AUTH_ERROR(0),
     NETWORK_NOT_FOUND(1)
 }
@@ -42,7 +42,7 @@ internal class CommandGetStatus
 internal data class ResponseGetStatus(
     @ProtoNumber(1) val status: Status = Status.SUCCESS,
     @ProtoNumber(2) val stationState: WifiStationState = WifiStationState.CONNECTED,
-    @ProtoNumber(10) val failedReason: WifiConnectFailedReason? = null
+    @ProtoNumber(10) val failReason: WifiConnectFailReason? = null
 )
 
 @Serializable
