@@ -33,7 +33,7 @@ import kotlin.coroutines.coroutineContext
 class BleProvisionManager(serviceCharacteristicUuid: String) {
 
     private val scanner = Scanner {
-        services = listOf(uuidFrom(serviceCharacteristicUuid))
+        filters = listOf(Filter.Service(uuidFrom(serviceCharacteristicUuid)))
         logging {
             engine = SystemLogEngine
             level = Logging.Level.Data
