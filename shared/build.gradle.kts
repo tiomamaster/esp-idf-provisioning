@@ -23,7 +23,7 @@ kotlin {
             dependencies {
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVersion")
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-protobuf:$serializationVersion")
-                implementation("io.github.aakira:napier:2.1.0")
+                implementation("io.github.aakira:napier:2.4.0")
                 implementation("com.juul.kable:core:0.11.0")
             }
         }
