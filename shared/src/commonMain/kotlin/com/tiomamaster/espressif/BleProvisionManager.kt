@@ -115,7 +115,7 @@ class BleProvisionManager(serviceCharacteristicUuid: String) {
      * Disconnect from the previously connected device using [connect].
      */
     suspend fun disconnect() = withTimeoutOrNull(5_000L) {
-        peripheral.disconnect()
+        if (this@BleProvisionManager::peripheral.isInitialized) peripheral.disconnect()
     }
 
     /**
