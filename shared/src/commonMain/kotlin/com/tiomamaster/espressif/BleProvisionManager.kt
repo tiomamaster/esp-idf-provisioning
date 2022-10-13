@@ -58,7 +58,7 @@ class BleProvisionManager(serviceCharacteristicUuid: String) {
         return scanner.advertisements.map {
             devices.add(BleDevice(it.name, it.mac, it.rssi, it.txPower))
             devices.toList()
-        }.flowOn(Dispatchers.IO)
+        }.flowOn(Dispatchers.Default)
     }
 
     /**

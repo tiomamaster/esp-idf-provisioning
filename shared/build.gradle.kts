@@ -1,5 +1,5 @@
-val coroutinesVersion = "1.6.0"
-val serializationVersion = "1.3.1"
+val coroutinesVersion = "1.6.4"
+val serializationVersion = "1.4.0"
 
 plugins {
     kotlin("multiplatform")
@@ -11,20 +11,16 @@ version = "0.1"
 
 kotlin {
     android()
-    ios {
-        binaries {
-            framework {
-                baseName = "esp-idf-provisioning"
-            }
-        }
-    }
+    macosX64()
+    iosX64()
+    iosArm64()
     sourceSets {
         val commonMain by getting {
             dependencies {
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVersion")
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-protobuf:$serializationVersion")
-                implementation("io.github.aakira:napier:2.4.0")
-                implementation("com.juul.kable:core:0.11.0")
+                implementation("io.github.aakira:napier:2.6.1")
+                implementation("com.juul.kable:core:0.19.0")
             }
         }
         val commonTest by getting {
@@ -46,16 +42,14 @@ kotlin {
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:$coroutinesVersion")
             }
         }
-        val iosMain by getting
-        val iosTest by getting
     }
 }
 
 android {
-    compileSdk = 31
+    compileSdk = 32
     sourceSets["main"].manifest.srcFile("src/androidMain/AndroidManifest.xml")
     defaultConfig {
         minSdk = 21
-        targetSdk = 31
+        targetSdk = 32
     }
 }
