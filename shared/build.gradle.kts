@@ -42,14 +42,36 @@ kotlin {
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:$coroutinesVersion")
             }
         }
+        val appleMain by creating {
+            dependsOn(commonMain)
+        }
+        val appleTest by creating
+        val macosX64Main by getting {
+            dependsOn(appleMain)
+        }
+        val macosX64Test by getting {
+            dependsOn(appleTest)
+        }
+        val iosX64Main by getting {
+            dependsOn(appleMain)
+        }
+        val iosX64Test by getting {
+            dependsOn(appleTest)
+        }
+        val iosArm64Main by getting {
+            dependsOn(appleMain)
+        }
+        val iosArm64Test by getting {
+            dependsOn(appleTest)
+        }
     }
 }
 
 android {
-    compileSdk = 32
+    compileSdk = 33
     sourceSets["main"].manifest.srcFile("src/androidMain/AndroidManifest.xml")
     defaultConfig {
         minSdk = 21
-        targetSdk = 32
+        targetSdk = 33
     }
 }

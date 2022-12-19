@@ -5,11 +5,11 @@ buildscript {
         mavenCentral()
     }
 
-    val kotlinVersion = "1.7.20"
+    val kotlinVersion = "1.7.21"
     dependencies {
         classpath(kotlin("gradle-plugin", version = kotlinVersion))
         classpath(kotlin("serialization", version = kotlinVersion))
-        classpath("com.android.tools.build:gradle:7.3.0")
+        classpath("com.android.tools.build:gradle:7.3.1")
     }
 }
 
