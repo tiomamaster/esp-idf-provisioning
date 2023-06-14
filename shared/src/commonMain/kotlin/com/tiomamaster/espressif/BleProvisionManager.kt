@@ -172,7 +172,7 @@ class BleProvisionManager(serviceCharacteristicUuid: String) {
      * @throws [Exception] if device responds with a wrong status
      * @throws [IllegalStateException] if not connected to the device
      */
-    suspend fun configureWiFi(ssid: String, passphrase: String) {
+    suspend fun configureWiFi(ssid: String, passphrase: String?) {
         val configCharacteristic = getCharacteristic(PATH_CONFIG)
 
         var wiFiConfigPayload = WiFiConfigPayload(

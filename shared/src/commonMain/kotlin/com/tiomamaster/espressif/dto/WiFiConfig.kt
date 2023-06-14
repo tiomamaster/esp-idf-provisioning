@@ -48,7 +48,7 @@ internal data class ResponseGetStatus(
 @Serializable
 internal data class CommandSetConfig(
     @ProtoNumber(1) val ssid: String,
-    @ProtoNumber(2) val passphrase: String
+    @ProtoNumber(2) val passphrase: String? = null
 )
 
 @Serializable
